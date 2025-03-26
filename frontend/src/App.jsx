@@ -1,22 +1,34 @@
-import Navbar from './components/Navbar';
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/Homepage';
-import HistoryPage from './pages/Historypage';
-import ResultPage from './pages/Resultpage';
+import { Routes, Route } from 'react-router-dom'
+import { useTheme } from './contexts/ThemeContext'
+import Navbar from './components/Navbar/Navbar'
+import HomePage from './pages/HomePage'
+import LoginPage from './components/Auth/Login'
+import RegisterPage from './components/Auth/RegisterForm'
+import HistoryPage from './pages/HistoryPage'
+import ResultPage from './pages/ResultPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
-function App() {
+export default function App() {
+  const { darkMode } = useTheme()
+
   return (
-    <>
-      <Navbar />
-      <div className="p-4">
+    <div className={`min-h-screen ${darkMode ? 'bg-dark-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <Navbar darkMode={darkMode} />
+      
+      <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/result" element={<ResultPage />} />
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage darkMode={darkMode} />} />
+          <Route path="/login" element={<LoginPage darkMode={darkMode} />} />
+          <Route path="/register" element={<RegisterPage darkMode={darkMode} />} />
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/history" element={<HistoryPage darkMode={darkMode} />} />
+            <Route path="/result" element={<ResultPage darkMode={darkMode} />} />
+          </Route>
         </Routes>
-      </div>
-    </>
-  );
+      </main>
+    </div>
+  )
 }
-
-export default App;
