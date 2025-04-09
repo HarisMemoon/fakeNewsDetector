@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FiUser, FiMail, FiLock, FiLoader } from 'react-icons/fi';
 
+
+
 export default function Register() {
   const { darkMode } = useTheme();
   const { login } = useAuth();
@@ -17,56 +19,69 @@ export default function Register() {
     confirmPassword: ''
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+ 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  
+  try {
+    validateForm();
     
-    try {
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
+    // Registration request
+    const response = await fetch('http://localhost:8000/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
 
-      // Replace with your actual API call
-      const response = await fetch('http://localhost:8000/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password
-        })
-      });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Registration failed');
+    }
 
-      if (!response.ok) throw new Error('Registration failed');
-      
-      // Auto-login after registration
-      const loginResponse = await fetch('http://localhost:8000/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username: formData.email,
-          password: formData.password
-        })
-      });
+    // Auto-login after registration
+    const loginResponse = await fetch('http://localhost:8000/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        username: formData.email,
+        password: formData.password
+      })
+    });
 
-      const data = await loginResponse.json();
-      login({
-        username: formData.username,
-        email: formData.email,
-        token: data.access_token
-      });
-      navigate('/');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!loginResponse.ok) {
+      throw new Error('Auto-login after registration failed');
+    }
+
+    const { access_token } = await loginResponse.json();
+    
+    // Store user data
+    login({
+      username: formData.username,
+      email: formData.email,
+      token: access_token
+    });
+    
+    navigate('/');
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+  const validateForm = () => {
+    if (formData.password !== formData.confirmPassword) {
+      throw new Error('Passwords do not match');
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      throw new Error('Invalid email address');
+    }
+    if (formData.password.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
     }
   };
+  
 
   return (
     <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-dark-900' : 'bg-gray-50'}`}>

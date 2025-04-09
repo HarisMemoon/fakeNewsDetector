@@ -5,3 +5,10 @@ psycopg2-binary
 python-dotenv
 pydantic
 asyncpg
+python-jose
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+pydantic
+pydantic[email]
+python-multipart

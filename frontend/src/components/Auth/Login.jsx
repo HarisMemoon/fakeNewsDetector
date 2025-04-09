@@ -25,25 +25,34 @@ import { FiMail, FiLock, FiLoader } from 'react-icons/fi';
     setError('');
     
     try {
-      // Replace with your actual API call
       const response = await fetch('http://localhost:8000/token', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           username: formData.email,
           password: formData.password
         })
       });
-
-      if (!response.ok) throw new Error('Login failed');
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+  
+      const { access_token } = await response.json();
       
-      const data = await response.json();
-      login({
-        email: formData.email,
-        token: data.access_token
+      // Fetch user profile if needed
+      const userResponse = await fetch('http://localhost:8000/users/me', {
+        headers: { Authorization: `Bearer ${access_token}` }
       });
+      
+      const userData = await userResponse.json();
+      
+      login({
+        ...userData,
+        token: access_token
+      });
+      
       navigate('/');
     } catch (err) {
       setError(err.message);

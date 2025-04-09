@@ -1,35 +1,45 @@
-version: '3.8'  # Explicit version recommended
+version: '3.8'
 
 services:
+ 
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:5525@db:5432/fake_detector  # Password must match
+      DATABASE_URL: "postgresql://postgres:5525@db:5432/fake_detector?connect_timeout=5&keepalives=1"
     volumes:
       - ./backend:/app
-      - /app/__pycache__
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - app-network
+      - fakenewsdetetctor_fakenewsdetetctor
+    restart: unless-stopped
+    healthcheck:  # Healthcheck for the backend
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_PASSWORD: 5525  # Now matches backend
+      POSTGRES_PASSWORD: 5525
       POSTGRES_DB: fake_detector
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_USER: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fake_detector"]
       interval: 5s
       timeout: 5s
       retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - fakenewsdetetctor_fakenewsdetetctor
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4
@@ -42,11 +52,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - app-network
+      - fakenewsdetetctor_fakenewsdetetctor
+    restart: unless-stopped
 
 volumes:
   postgres_data:
 
 networks:
-  app-network:
+  fakenewsdetetctor_fakenewsdetetctor:
     driver: bridge
