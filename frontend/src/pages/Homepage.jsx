@@ -1,136 +1,413 @@
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Line, Doughnut } from "react-chartjs-2";
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
 
 const HomePage = ({ darkMode }) => {
   const articleRef = useRef(null);
+  const [inputText, setInputText] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  // Mock analysis data
+  const analysisData = {
+    credibility: 82,
+    emotionalLanguage: 35,
+    sourceReputation: 68,
+    history: [65, 59, 80, 81, 82],
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const scrollToArticle = () => {
     articleRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const startAnalysis = () => {
+    setIsAnalyzing(true);
+    setTimeout(() => setIsAnalyzing(false), 2500);
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: 0,
+    },
+    plugins: {
+      legend: { display: false },
+    },
+    // scales: {
+    //   x: {
+    //     grid: {
+    //       display: false,
+    //       drawBorder: false,
+    //     },
+    //     ticks: {
+    //       padding: 0,
+    //     },
+    //   },
+    //   y: {
+    //     grid: {
+    //       color: darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+    //       drawBorder: false,
+    //     },
+    //     ticks: {
+    //       padding: 0,
+    //     },
+    //   },
+    // },
+  };
+
+  const credibilityChart = {
+    data: {
+      datasets: [
+        {
+          data: [analysisData.credibility, 100 - analysisData.credibility],
+          backgroundColor: [
+            darkMode ? "#3b82f6" : "#2563eb",
+            darkMode ? "#1e293b" : "#f0f4ff",
+          ],
+          borderWidth: 0,
+          reverse: true,
+        },
+      ],
+    },
+    options: {
+      ...chartOptions,
+      cutout: "75%",
+    },
+  };
+  const lineChart = {
+    data: {
+      labels: ["1m ago", "45s ago", "30s ago", "15s ago", "Now"],
+      datasets: [
+        {
+          label: "Credibility Score",
+          data: analysisData.history,
+          borderColor: darkMode ? "#3b82f6" : "#2563eb",
+          backgroundColor: darkMode
+            ? "rgba(59, 130, 246, 0.1)"
+            : "rgba(37, 99, 235, 0.1)",
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+  };
+
   return (
-    <div className={`${darkMode ? "bg-dark-900" : "bg-gradient-to-br from-blue-50 to-blue-100"} font-sans`}>
-      {/* Hero Section - Full width and height */}
-      <section className={`min-h-screen w-full flex flex-col justify-center items-center text-center p-6 ${darkMode ? "bg-dark-900" : "bg-gradient-to-br from-blue-50 to-blue-100"}`}>
-        <div className="max-w-5xl mx-auto">
-          <h1 className={`text-6xl md:text-7xl font-bold mb-6 ${darkMode ? "text-blue-400" : "text-blue-900"} font-poppins`}>
+    <div
+      className={`${
+        darkMode ? "bg-dark-900" : "bg-gradient-to-br from-blue-50 to-indigo-50"
+      } font-sans transition-colors duration-300`}
+    >
+      {/* Hero Section */}
+      <section
+        className={`min-h-screen flex flex-col justify-center items-center text-center px-6 pt-24 ${
+          darkMode
+            ? "bg-dark-900"
+            : "bg-gradient-to-br from-blue-50 to-indigo-50"
+        }`}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-5xl mx-auto"
+        >
+          <h1
+            className={`text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r ${
+              darkMode
+                ? "from-blue-400 to-green-400"
+                : "from-blue-600 to-indigo-600"
+            } bg-clip-text text-transparent font-poppins`}
+          >
             Fake News Detector
           </h1>
-          <p className={`text-xl md:text-2xl mb-8 ${darkMode ? "text-gray-300" : "text-gray-700"} font-light max-w-3xl mx-auto`}>
-            Instantly verify the authenticity of news articles using advanced AI technology.
+          <p
+            className={`text-xl md:text-2xl mb-8 ${
+              darkMode ? "text-gray-300" : "text-slate-700"
+            } font-light max-w-3xl mx-auto`}
+          >
+            Combating misinformation with AI-powered analysis and real-time
+            credibility assessment
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={scrollToArticle}
-              className={`${darkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-8 py-4 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 font-medium`}
+              className={`bg-gradient-to-r ${
+                darkMode
+                  ? "from-blue-600 to-green-600"
+                  : "from-blue-500 to-indigo-500"
+              } text-white px-8 py-4 rounded-xl shadow-lg font-medium`}
             >
-              Try It Now
-            </button>
-            <Link
-              to="/about"
-              className={`${darkMode ? "bg-dark-700 hover:bg-dark-600" : "bg-white hover:bg-blue-50"} ${darkMode ? "text-gray-300" : "text-blue-800"} px-8 py-4 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 font-medium border ${darkMode ? "border-dark-600" : "border-blue-100"}`}
-            >
-              Learn More
-            </Link>
+              Start Analysis
+            </motion.button>
           </div>
-        </div>
-        
-        {/* Animated scroll indicator */}
-        <div className="mt-24 animate-bounce">
-          <svg 
-            className={`w-8 h-8 ${darkMode ? "text-blue-500" : "text-blue-600"}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
+        </motion.div>
+
+        {/* Animated Demo Graph - Now with proper responsive container */}
+        <motion.div
+          className="mt-24 w-[80%] px-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div
+            className={`p-6 rounded-2xl ${
+              darkMode ? "bg-dark-800" : "bg-white"
+            } shadow-lg border ${
+              darkMode ? "border-dark-700" : "border-slate-200"
+            }`}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
+            <div className="w-full h-64 relative">
+              <Line data={lineChart.data} options={chartOptions} />
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
       <section className="w-full py-20">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className={`text-4xl font-bold text-center mb-16 ${darkMode ? "text-blue-400" : "text-blue-900"}`}>
+          <h2
+            className={`text-4xl font-bold text-center mb-16 ${
+              darkMode ? "text-blue-400" : "text-blue-800"
+            }`}
+          >
             Why Choose Our Detector?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { 
-                title: "⚡ Fast Analysis", 
-                desc: "Quickly scan articles and detect misinformation with our optimized AI engine.",
-                icon: "M13 10V3L4 14h7v7l9-11h-7z"
+              {
+                title: "⚡ Instant Analysis",
+                desc: "Real-time scanning with our optimized AI engine delivers results in seconds.",
+                icon: "M13 10V3L4 14h7v7l9-11h-7z",
               },
-              { 
-                title: "🔒 Reliable Results", 
-                desc: "Trained on millions of data points to ensure high accuracy and trustworthy results.",
-                icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              {
+                title: "🔍 Deep Verification",
+                desc: "Cross-references multiple sources for comprehensive fact-checking.",
+                icon: "M19 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
               },
-              { 
-                title: "👌 Easy to Use", 
-                desc: "No signups, no hassle. Just paste your content and get instant verification.",
-                icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              {
+                title: "📊 Insightful Reports",
+                desc: "Detailed breakdowns of credibility factors and risk indicators.",
+                icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2z",
               },
             ].map((feature, index) => (
-              <div 
-                key={index} 
-                className={`${darkMode ? "bg-dark-800 border-dark-700" : "bg-white border-blue-100"} p-8 rounded-xl border hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2`}
+              <motion.div
+                key={index}
+                whileHover={{ y: -5 }}
+                className={`${
+                  darkMode
+                    ? "bg-dark-800 border-dark-700"
+                    : "bg-white border-slate-200"
+                } p-8 rounded-2xl border hover:shadow-xl transition-all duration-300`}
               >
-                <div className={`${darkMode ? "bg-dark-700" : "bg-blue-100"} w-14 h-14 rounded-full flex items-center justify-center mb-6`}>
-                  <svg 
-                    className={`w-6 h-6 ${darkMode ? "text-blue-400" : "text-blue-600"}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    xmlns="http://www.w3.org/2000/svg"
+                <div
+                  className={`${
+                    darkMode ? "bg-dark-700" : "bg-blue-100"
+                  } w-14 h-14 rounded-xl flex items-center justify-center mb-6`}
+                >
+                  <svg
+                    className={`w-6 h-6 ${
+                      darkMode ? "text-blue-400" : "text-blue-600"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d={feature.icon}
+                    />
                   </svg>
                 </div>
-                <h3 className={`font-semibold text-2xl ${darkMode ? "text-blue-400" : "text-blue-800"} mb-4`}>{feature.title}</h3>
-                <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} font-light`}>{feature.desc}</p>
-              </div>
+                <h3
+                  className={`font-semibold text-2xl ${
+                    darkMode ? "text-blue-400" : "text-blue-800"
+                  } mb-4`}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  className={`${
+                    darkMode ? "text-gray-300" : "text-slate-600"
+                  } font-light`}
+                >
+                  {feature.desc}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Article Input Section */}
-      <section 
-        ref={articleRef} 
-        className={`w-full py-20 ${darkMode ? "bg-dark-800" : "bg-blue-50"}`}
+      {/* Analysis Section */}
+      <section
+        ref={articleRef}
+        className={`w-full py-20 ${
+          darkMode
+            ? "bg-dark-800"
+            : "bg-gradient-to-br from-blue-50 to-indigo-50"
+        }`}
       >
-        <div className="max-w-3xl mx-auto px-6">
-          <div className={`${darkMode ? "bg-dark-700 border-dark-600" : "bg-white border-blue-100"} p-8 md:p-10 rounded-2xl shadow-sm border`}>
-            <h2 className={`text-3xl font-bold ${darkMode ? "text-blue-400" : "text-blue-900"} mb-2`}>Check News Authenticity</h2>
-            <p className={`${darkMode ? "text-gray-400" : "text-gray-600"} mb-8`}>
-              Paste any news article below to analyze its credibility
-            </p>
-            
-            <textarea
-              className={`w-full h-56 p-5 rounded-xl border-2 ${darkMode ? "border-dark-600 bg-dark-600 text-gray-300" : "border-gray-200 bg-white text-gray-700"} focus:outline-none focus:ring-2 focus:ring-blue-500 mb-8 resize-none transition-all duration-300 placeholder-gray-400`}
-              placeholder="Paste your news article here..."
-            ></textarea>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/result"
-                className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} px-8 py-4 rounded-lg text-white text-lg shadow-md transition-all duration-300 hover:scale-105 font-medium text-center flex-1`}
-              >
-                Analyze Now
-              </Link>
-              <button
-                className={`${darkMode ? "bg-dark-600 hover:bg-dark-500" : "bg-blue-100 hover:bg-blue-200"} ${darkMode ? "text-gray-300" : "text-blue-800"} px-8 py-4 rounded-lg text-lg shadow-md transition-all duration-300 hover:scale-105 font-medium border ${darkMode ? "border-dark-500" : "border-blue-200"} flex-1`}
-              >
-                Upload File
-              </button>
+        <div className="max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ scale: 0.95 }}
+            whileInView={{ scale: 1 }}
+            className={`p-8 rounded-3xl ${
+              darkMode ? "bg-dark-700" : "bg-white"
+            } shadow-2xl border ${
+              darkMode ? "border-dark-600" : "border-slate-200"
+            }`}
+          >
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Input Section */}
+              <div className="flex-1">
+                <h2
+                  className={`text-3xl font-bold mb-4 ${
+                    darkMode ? "text-blue-400" : "text-blue-800"
+                  }`}
+                >
+                  Analyze Content
+                </h2>
+
+                <div
+                  className={`relative border-2 ${
+                    darkMode ? "border-dark-600" : "border-slate-200"
+                  } rounded-xl mb-6 transition-all duration-300 hover:border-blue-400`}
+                >
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className={`w-full h-64 p-4 bg-transparent resize-none focus:outline-none ${
+                      darkMode ? "text-gray-300" : "text-slate-700"
+                    } placeholder-slate-400`}
+                    placeholder="Paste article text or URL..."
+                    maxLength="2000"
+                  />
+                  <div
+                    className={`absolute bottom-4 right-4 text-sm ${
+                      darkMode ? "text-gray-500" : "text-slate-500"
+                    }`}
+                  >
+                    {inputText.length}/2000
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={startAnalysis}
+                  disabled={isAnalyzing}
+                  className={`w-full py-4 rounded-xl font-medium ${
+                    isAnalyzing
+                      ? "bg-blue-400"
+                      : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                  } text-white transition-all`}
+                >
+                  {isAnalyzing ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white rounded-full animate-spin" />
+                      Analyzing...
+                    </div>
+                  ) : (
+                    "Start Analysis"
+                  )}
+                </motion.button>
+              </div>
+
+              {/* Live Analysis Preview */}
+              <div className="md:w-80 flex flex-col gap-6">
+                <div
+                  className={`p-6 rounded-xl ${
+                    darkMode ? "bg-dark-600" : "bg-slate-100"
+                  }`}
+                >
+                  <h3
+                    className={`text-sm font-medium mb-3 ${
+                      darkMode ? "text-gray-400" : "text-slate-600"
+                    }`}
+                  >
+                    Credibility Score
+                  </h3>
+                  <div className="relative w-full h-64">
+                    <Doughnut
+                      key={`doughnut-chart-${windowSize.width}`}
+                      data={credibilityChart.data}
+                      options={credibilityChart.options}
+                    />
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${
+                        darkMode ? "text-blue-400" : "text-blue-800"
+                      }`}
+                    >
+                      {analysisData.credibility}%
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`p-6 rounded-xl ${
+                    darkMode ? "bg-dark-600" : "bg-slate-100"
+                  }`}
+                >
+                  <h3
+                    className={`text-sm font-medium mb-3 ${
+                      darkMode ? "text-gray-400" : "text-slate-600"
+                    }`}
+                  >
+                    Risk Indicators
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Emotional Language</span>
+                      <span
+                        className={`font-medium ${
+                          analysisData.emotionalLanguage > 40
+                            ? "text-red-400"
+                            : "text-green-400"
+                        }`}
+                      >
+                        {analysisData.emotionalLanguage}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Source Reputation</span>
+                      <span
+                        className={`font-medium ${
+                          analysisData.sourceReputation < 50
+                            ? "text-red-400"
+                            : "text-green-400"
+                        }`}
+                      >
+                        {analysisData.sourceReputation}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <p className={`text-sm mt-4 ${darkMode ? "text-gray-500" : "text-gray-600"}`}>
-              By submitting, you agree to our Terms of Service and Privacy Policy
-            </p>
-          </div>
+          </motion.div>
         </div>
       </section>
     </div>
